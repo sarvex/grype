@@ -23,10 +23,10 @@ def assert_single_schema_version(schema_to_locations):
         for x in schema_versions_found:
             int(x)
     except ValueError:
-        sys.exit("Non-numeric schema found: %s" % ", ".join(schema_versions_found))
+        sys.exit(f'Non-numeric schema found: {", ".join(schema_versions_found)}')
 
     if len(schema_to_locations) > 1:
-        sys.exit("Found multiple schemas: %s" % ", ".join(schema_versions_found))
+        sys.exit(f'Found multiple schemas: {", ".join(schema_versions_found)}')
     elif len(schema_to_locations) == 0:
         sys.exit("No schemas found!")
 
@@ -41,20 +41,12 @@ def find_db_schema_usages(filter_out_regexes=None, keep_regexes=None):
             location = os.path.join(root, file)
 
             if filter_out_regexes:
-                do_filter = False
-                for regex in filter_out_regexes:
-                    if regex.findall(location):
-                        do_filter = True
-                        break
+                do_filter = any(regex.findall(location) for regex in filter_out_regexes)
                 if do_filter:
                     continue
 
             if keep_regexes:
-                do_keep = False
-                for regex in keep_regexes:
-                    if regex.findall(location):
-                        do_keep = True
-                        break
+                do_keep = any(regex.findall(location) for regex in keep_regexes)
                 if not do_keep:
                     continue
 
@@ -76,7 +68,9 @@ def validate_schema_consumers():
     schema_to_locations = find_db_schema_usages(filter_out_regexes=[db_dir_regex])
     report_schema_versions_found("Consumers of", schema_to_locations)
     assert_single_schema_version(schema_to_locations)
-    print("Consuming schema versions found: %s" % list(schema_to_locations.keys())[0])
+    print(
+        f"Consuming schema versions found: {list(schema_to_locations.keys())[0]}"
+    )
 
 
 def validate_schema_definitions():

@@ -61,7 +61,7 @@ class Gate:
 
 def guess_tool_orientation(tools: list[str]):
     if len(tools) != 2:
-        raise RuntimeError("expected 2 tools, got %s" % tools)
+        raise RuntimeError(f"expected 2 tools, got {tools}")
 
     current_tool = None
     latest_release_tool = None
@@ -91,7 +91,7 @@ class bcolors:
     RESET = '\033[0m'
 
 def show_results_used(results: list[artifact.ScanResult]):
-    print(f"   Results used:")
+    print("   Results used:")
     for idx, result in enumerate(results):
         branch = "├──"
         if idx == len(results) - 1:
@@ -146,7 +146,10 @@ def validate_image(cfg: config.Application, descriptions: list[str], always_run_
         print()
 
     # bail if there are no differences found
-    if not always_run_label_comparison and not sum([len(relative_comparison.unique[result.ID]) for result in relative_comparison.results]):
+    if not always_run_label_comparison and not sum(
+        len(relative_comparison.unique[result.ID])
+        for result in relative_comparison.results
+    ):
         print("no differences found between tool results")
         return Gate(None, None)
 
@@ -179,7 +182,7 @@ def validate_image(cfg: config.Application, descriptions: list[str], always_run_
                 label = ", ".join([l.name for l in labels])
             else:
                 label = labels[0].name
-            
+
 
             color = ""
             commentary = ""
@@ -243,12 +246,10 @@ def main(images: list[str], always_run_label_comparison: bool, breakdown_by_ecos
 
     # let's not load any more labels than we need to, base this off of the images we're validating
     if not images:
-        images = set()
         result_set_obj = store.result_set.load(name=result_set)
-        for state in result_set_obj.state:
-            images.add(state.config.image)
+        images = {state.config.image for state in result_set_obj.state}
         images = sorted(list(images))
- 
+
     print("Loading label entries...", end=" ")
     label_entries = store.labels.load_for_image(images, year_max_limit=cfg.default_max_year)
     print(f"done! {len(label_entries)} entries loaded")
@@ -258,7 +259,7 @@ def main(images: list[str], always_run_label_comparison: bool, breakdown_by_ecos
     for result_set in result_sets:
         gates.extend(validate(cfg, result_set, images=images, always_run_label_comparison=always_run_label_comparison, verbosity=verbosity, label_entries=label_entries))
         print()
-    
+
         if breakdown_by_ecosystem:
             print(f"{bcolors.HEADER}Breaking down label comparison by ecosystem performance...", bcolors.RESET)
             results_by_image, label_entries, stats = yardstick.compare_results_against_labels_by_ecosystem(result_set=result_set, year_max_limit=cfg.default_max_year, label_entries=label_entries)
@@ -269,7 +270,7 @@ def main(images: list[str], always_run_label_comparison: bool, breakdown_by_ecos
             )
             print()
 
-    failure = not all([gate.passed() for gate in gates])
+    failure = not all(gate.passed() for gate in gates)
     if failure:
         print("Reasons for quality gate failure:")
     for gate in gates:
@@ -288,7 +289,7 @@ def setup_logging(verbosity: int):
     # pylint: disable=redefined-outer-name, import-outside-toplevel
     import logging.config
 
-    if verbosity in [0, 1, 2]:
+    if verbosity in {0, 1, 2}:
         log_level = "WARN"
     elif verbosity == 3:
         log_level = "INFO"
